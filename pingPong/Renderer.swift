@@ -1,18 +1,20 @@
 import MetalKit
 
-/// Parameters that are passed into the shader, some of which can be adjusted with the user interface.
+/**
+ - Important: You must be explicit about types here and not rely on Swift's
+   type inference when passing values into the shader functions.
+*/
 struct Uniforms {
-    ///
-    var timer: Float = 0
-    ///
+    /// Scales the texture coordinates that feed the curl noise function.
     var noiseScale: Float = 2.5
-    ///
-    var resolution = SIMD2<Float>(1024, 1024)
+    /// Scales the offset generated with the curl noise function.
+    var noiseOffset: Float = 0
+    /// Width and height of the textures used for Ping-pong buffer technique.
+    var resolution: SIMD2<Float> = SIMD2<Float>(1024, 1024)
 }
 
-// Any attempt to subclass a final class is reported as a compile-time error
+// Any attempt to subclass a final class is reported as a compile-time error.
 final class Renderer: NSObject {
-    
     /*
      Metal has a major advantage over OpenGL in that
      you're able to instantiate some objects up front.
@@ -20,40 +22,33 @@ final class Renderer: NSObject {
  
     /// Basic Metal entities to interface with the designated GPU.
     var metal: (device: MTLDevice, queue: MTLCommandQueue, library: MTLLibrary)
-    
-    public var uniforms = Uniforms()
-    
-    var image: MTLTexture!
-    
-    // You should check whether frame buffer only is allowed on iOS
-    // Two compute pipelines - one for computation one for rendering
-    // var states: (compute: MTLComputePipelineState, render: MTLRenderPipelineState)
-    var states: (compute: MTLComputePipelineState, render: MTLComputePipelineState)
-    
+    /// Three compute pipelines - one for computation, one for rendering and a third that clears the textures.
+    var states: (compute: MTLComputePipelineState, render: MTLComputePipelineState, reset: MTLComputePipelineState)
+    /// Metal textures for Ping-pong buffer technique.
     var textures: (read: MTLTexture, write: MTLTexture)
+    /// This array makes it easy to swap the textures after each compute pass.
     var textureBufferIndex: [Int] = [0, 1]
+    /// Parameters that are passed into the shader, some of which can be adjusted with the user interface.
+    public var uniforms = Uniforms()
+    /// To visualize the curl noise this image will be sampled with an offset added to each uv coordinate.
+    var image: MTLTexture!
+    /// When true the components of the textures are set to 0.
+    var reset: Bool = false
     
     init(view: MTKView) {
         self.metal = Renderer.setupMetal()
         self.states = Renderer.setupComputePipelines(device: metal.device, library: metal.library)
-        
-        // The current size of the drawable textures
-        // view.drawableSize
-        
-        // Have a function where you pass in the uniforms resolution?
-        
-        
         self.textures = Renderer.setupTextures(device: metal.device)
-        
-        self.image = Renderer.loadTexture(name: "bikers", device: metal.device)
+        self.image = Renderer.loadTexture(device: metal.device, name: "bikers")
 
-        
         super.init()
         
-        // Do as much of this in the view controller as possible!
+        // Final steps to set up the view
         view.device = metal.device
-        view.framebufferOnly = false
         view.delegate = self
+        
+        // This allows you to write directly to the current drawable with a compute shader
+        view.framebufferOnly = false
     }
 }
 
@@ -78,22 +73,25 @@ private extension Renderer {
     
     /// - parameter device: Metal device needed to create pipeline state object.
     /// - parameter library: Compile Metal code hosting the kernel function driving the compute pipeline.
-    static func setupComputePipelines(device: MTLDevice, library: MTLLibrary) -> (compute: MTLComputePipelineState, render: MTLComputePipelineState) {
+    static func setupComputePipelines(device: MTLDevice, library: MTLLibrary) -> (compute: MTLComputePipelineState, render: MTLComputePipelineState, reset: MTLComputePipelineState) {
         guard let computeFunction = library.makeFunction(name: "pingPong"),
-              let renderFunction = library.makeFunction(name: "render") else {
+              let renderFunction = library.makeFunction(name: "render"),
+              let resetFunction = library.makeFunction(name: "reset") else {
                 fatalError("The kernel functions could not be created.")
         }
         
         guard let computePipeline = try? device.makeComputePipelineState(function: computeFunction),
-              let renderPipeline = try? device.makeComputePipelineState(function: renderFunction) else {
+              let renderPipeline = try? device.makeComputePipelineState(function: renderFunction),
+              let resetPipeline = try? device.makeComputePipelineState(function: resetFunction) else {
                 fatalError("The pipelines could not be created.")
         }
         
-        return (computePipeline, renderPipeline)
+        return (computePipeline, renderPipeline, resetPipeline)
     }
     
     /// We only need to use an .rg32Float texture here.
     static func setupTextures(device: MTLDevice) -> (read: MTLTexture, write: MTLTexture) {
+        // Pass in uniforms to the function to access the resolution?
         let descriptor = MTLTextureDescriptor.texture2DDescriptor(pixelFormat: .rg32Float, width: 1024, height: 1024, mipmapped: false)
         
         descriptor.usage = [.shaderWrite, .shaderRead]
@@ -106,7 +104,7 @@ private extension Renderer {
         return (textureA, textureB)
     }
     
-    static func loadTexture(name: String, device: MTLDevice) -> MTLTexture {
+    static func loadTexture(device: MTLDevice, name: String) -> MTLTexture {
         let textureLoader = MTKTextureLoader(device: device)
         
         let options = [MTKTextureLoader.Option.SRGB: false]
@@ -134,6 +132,13 @@ extension Renderer: MTKViewDelegate {
         
         for _ in 0...1 {
             pingPong(commandBuffer: commandBuffer)
+        }
+        
+        if reset {
+            // This function simply uses a compute shader to set
+            // the rg components of the Ping-pong textures to 0
+            reset(commandBuffer: commandBuffer)
+            reset = false
         }
         
         if let drawable = view.currentDrawable {
@@ -186,5 +191,25 @@ extension Renderer: MTKViewDelegate {
 
         renderEncoder.dispatchThreads(threadsPerGrid, threadsPerThreadgroup: threadsPerThreadGroup)
         renderEncoder.endEncoding()
+    }
+    
+    func reset(commandBuffer: MTLCommandBuffer) {
+        let computeEncoder = commandBuffer.makeComputeCommandEncoder()!
+        computeEncoder.setComputePipelineState(states.reset)
+        
+        computeEncoder.setTexture(textures.read, index: 0)
+        computeEncoder.setTexture(textures.write, index: 1)
+        
+        // Declare the number of threads per thread group and threads per grid
+        var width = states.compute.threadExecutionWidth
+        var height = states.compute.maxTotalThreadsPerThreadgroup / width
+        let threadsPerThreadGroup = MTLSizeMake(width, height, 1)
+        
+        width = Int(textures.read.width)
+        height = Int(textures.read.height)
+        let threadsPerGrid = MTLSizeMake(width, height, 1)
+        
+        computeEncoder.dispatchThreads(threadsPerGrid, threadsPerThreadgroup: threadsPerThreadGroup)
+        computeEncoder.endEncoding()
     }
 }

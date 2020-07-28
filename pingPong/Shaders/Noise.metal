@@ -89,5 +89,3 @@ float2 curlSnoise(float2 v) {
     float dy = (snoise(v + float2(0, epsilon)) - snoise(v - float2(0, epsilon))) / (2.0 * epsilon);
     return float2(dy, -dx);
 }
-
-

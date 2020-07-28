@@ -45,8 +45,8 @@
 			isa = PBXGroup;
 			children = (
 				6FC9BC672373275D006D7C6F /* Compute.metal */,
-				6F943E8E24CE163D00B79D47 /* Noise.metal */,
 				6F943E9124CE170C00B79D47 /* Noise.h */,
+				6F943E8E24CE163D00B79D47 /* Noise.metal */,
 			);
 			path = Shaders;
 			sourceTree = "<group>";
