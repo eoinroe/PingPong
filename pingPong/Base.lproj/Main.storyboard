@@ -737,9 +737,33 @@
                                     <action selector="resetTexturesWithSender:" target="XfG-lQ-9wD" id="GHu-A2-vLR"/>
                                 </connections>
                             </button>
+                            <popUpButton verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="N51-TZ-d0N">
+                                <rect key="frame" x="513" y="137" width="137" height="25"/>
+                                <popUpButtonCell key="cell" type="push" title="Clamp to Border" bezelStyle="rounded" alignment="center" lineBreakMode="truncatingTail" state="on" borderStyle="border" inset="2" selectedItem="wrb-yi-PAs" id="X9Z-Zz-PHI">
+                                    <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                                    <font key="font" metaFont="system"/>
+                                    <menu key="menu" id="rLF-qb-dVK">
+                                        <items>
+                                            <menuItem title="Repeat" id="Tfy-uG-yZX"/>
+                                            <menuItem title="Mirrored Repeat" id="qFt-Iw-WCI"/>
+                                            <menuItem title="Clamp to Edge" id="gFw-lD-Vi3"/>
+                                            <menuItem title="Clamp to Zero" id="n9T-Mh-S80"/>
+                                            <menuItem title="Clamp to Border" state="on" id="wrb-yi-PAs"/>
+                                        </items>
+                                    </menu>
+                                </popUpButtonCell>
+                            </popUpButton>
                             <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="2Zn-eF-0kC">
                                 <rect key="frame" x="513" y="332" width="80" height="16"/>
                                 <textFieldCell key="cell" lineBreakMode="clipping" title="Noise Offset" id="Vd7-fn-AGk">
+                                    <font key="font" metaFont="system"/>
+                                    <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                                    <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                                </textFieldCell>
+                            </textField>
+                            <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="TKp-og-adD">
+                                <rect key="frame" x="513" y="176" width="110" height="16"/>
+                                <textFieldCell key="cell" lineBreakMode="clipping" title="Addressing Mode" id="XT6-Rs-pmw">
                                     <font key="font" metaFont="system"/>
                                     <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
                                     <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
@@ -757,13 +781,17 @@
                         <constraints>
                             <constraint firstItem="2Zn-eF-0kC" firstAttribute="leading" relation="greaterThanOrEqual" secondItem="U9x-Tl-TBR" secondAttribute="trailing" symbolic="YES" id="05T-cD-kDS"/>
                             <constraint firstAttribute="trailing" secondItem="U9x-Tl-TBR" secondAttribute="trailing" constant="200" id="1I0-gw-qXO"/>
+                            <constraint firstAttribute="trailing" secondItem="TKp-og-adD" secondAttribute="trailing" constant="79" id="2er-mX-fvn"/>
                             <constraint firstItem="ri4-wM-vgZ" firstAttribute="leading" secondItem="U9x-Tl-TBR" secondAttribute="trailing" constant="15" id="AmW-In-pbl"/>
                             <constraint firstAttribute="trailing" secondItem="2Zn-eF-0kC" secondAttribute="trailing" constant="109" id="Bfi-uP-g8Y"/>
+                            <constraint firstAttribute="trailing" secondItem="N51-TZ-d0N" secondAttribute="trailing" constant="53" id="BgS-Vj-qeI"/>
                             <constraint firstItem="ktV-sH-LAm" firstAttribute="leading" relation="greaterThanOrEqual" secondItem="U9x-Tl-TBR" secondAttribute="trailing" symbolic="YES" id="Fgf-Cx-R12"/>
                             <constraint firstItem="bg3-7a-HMx" firstAttribute="leading" secondItem="U9x-Tl-TBR" secondAttribute="trailing" constant="60" id="Hdf-2b-HLq"/>
+                            <constraint firstItem="N51-TZ-d0N" firstAttribute="leading" relation="greaterThanOrEqual" secondItem="U9x-Tl-TBR" secondAttribute="trailing" constant="8" symbolic="YES" id="IV5-e1-p34"/>
                             <constraint firstItem="U9x-Tl-TBR" firstAttribute="leading" secondItem="ab1-vA-stc" secondAttribute="leading" id="JR0-9s-18J"/>
                             <constraint firstItem="bg3-7a-HMx" firstAttribute="top" secondItem="ab1-vA-stc" secondAttribute="top" constant="30" id="KUU-eY-24o"/>
                             <constraint firstAttribute="bottom" secondItem="U9x-Tl-TBR" secondAttribute="bottom" id="KuY-OO-Wnv"/>
+                            <constraint firstItem="TKp-og-adD" firstAttribute="leading" relation="greaterThanOrEqual" secondItem="U9x-Tl-TBR" secondAttribute="trailing" constant="8" symbolic="YES" id="MId-yM-oR5"/>
                             <constraint firstItem="ri4-wM-vgZ" firstAttribute="top" secondItem="2Zn-eF-0kC" secondAttribute="bottom" constant="5" id="Qj3-XC-ojw"/>
                             <constraint firstItem="ktV-sH-LAm" firstAttribute="top" secondItem="bg3-7a-HMx" secondAttribute="bottom" constant="40" id="QxP-zk-WDl"/>
                             <constraint firstItem="2Zn-eF-0kC" firstAttribute="top" secondItem="6rr-DK-pWk" secondAttribute="bottom" constant="25" id="T0t-PM-tGO"/>
@@ -771,6 +799,8 @@
                             <constraint firstAttribute="trailing" relation="greaterThanOrEqual" secondItem="bg3-7a-HMx" secondAttribute="trailing" constant="20" symbolic="YES" id="ZUL-mS-BNF"/>
                             <constraint firstAttribute="trailing" secondItem="6rr-DK-pWk" secondAttribute="trailing" constant="15" id="bhs-mr-T4Y"/>
                             <constraint firstAttribute="trailing" secondItem="ri4-wM-vgZ" secondAttribute="trailing" constant="15" id="c1H-Vn-dne"/>
+                            <constraint firstItem="N51-TZ-d0N" firstAttribute="top" secondItem="TKp-og-adD" secondAttribute="bottom" constant="15" id="fxG-z2-WZp"/>
+                            <constraint firstItem="TKp-og-adD" firstAttribute="top" secondItem="ri4-wM-vgZ" secondAttribute="bottom" constant="120" id="gHZ-5g-pLE"/>
                             <constraint firstItem="U9x-Tl-TBR" firstAttribute="top" secondItem="ab1-vA-stc" secondAttribute="top" id="mtO-uy-kRE"/>
                             <constraint firstAttribute="trailing" secondItem="ktV-sH-LAm" secondAttribute="trailing" constant="113" id="o02-js-pvp"/>
                             <constraint firstItem="6rr-DK-pWk" firstAttribute="top" secondItem="ktV-sH-LAm" secondAttribute="bottom" constant="5" id="xmg-FC-2Om"/>

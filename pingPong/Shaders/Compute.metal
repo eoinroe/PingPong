@@ -11,7 +11,7 @@ struct Uniforms {
 };
 
 constexpr sampler linear_sampler(coord::normalized,
-                                 address::repeat,
+                                 address::repeat,   // clamp_to_edge is the default
                                  filter::linear);
 
 void kernel pingPong (texture2d<float, access::sample> input [[ texture(0) ]],
@@ -35,6 +35,7 @@ void kernel pingPong (texture2d<float, access::sample> input [[ texture(0) ]],
 void kernel render (texture2d<float, access::sample> source_image      [[ texture(0) ]],
                     texture2d<float, access::write>  current_drawable  [[ texture(1) ]],
                     texture2d<float, access::sample> offset_value      [[ texture(2) ]],
+                    sampler texture_sampler [[ sampler(0) ]],
                     uint2 gid [[ thread_position_in_grid ]])
 {
     float2 resolution (current_drawable.get_width(), current_drawable.get_height());
@@ -44,7 +45,7 @@ void kernel render (texture2d<float, access::sample> source_image      [[ textur
     float2 offset = offset_value.sample(linear_sampler, st).rg;
     
     // Lookup the color value for this pixel by applying the offset to the texture coordinates
-    float3 color = source_image.sample(linear_sampler, st + offset).rgb;
+    float3 color = source_image.sample(texture_sampler, st + offset).rgb;
     current_drawable.write(float4(color, 1.0), gid);
 }
 

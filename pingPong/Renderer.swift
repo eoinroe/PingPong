@@ -35,11 +35,27 @@ final class Renderer: NSObject {
     /// When true the components of the textures are set to 0.
     var reset: Bool = false
     
+    enum Samplers {
+        case _repeat, mirrored_repeat, clamp_to_edge, clamp_to_zero, clamp_to_border
+    }
+    
+    var textureSampler: MTLSamplerState
+    
     init(view: MTKView) {
         self.metal = Renderer.setupMetal()
         self.states = Renderer.setupComputePipelines(device: metal.device, library: metal.library)
         self.textures = Renderer.setupTextures(device: metal.device)
         self.image = Renderer.loadTexture(device: metal.device, name: "bikers")
+        
+        let descriptor = MTLSamplerDescriptor()
+        descriptor.normalizedCoordinates = true
+        descriptor.borderColor = .opaqueBlack
+        descriptor.sAddressMode = .clampToBorderColor
+        descriptor.tAddressMode = .clampToBorderColor
+        descriptor.magFilter = .linear
+        descriptor.minFilter = .linear
+        
+        textureSampler = metal.device.makeSamplerState(descriptor: descriptor)!
 
         super.init()
         
@@ -175,9 +191,12 @@ extension Renderer: MTKViewDelegate {
     func render(commandBuffer: MTLCommandBuffer, drawable: MTLTexture) {
         let renderEncoder = commandBuffer.makeComputeCommandEncoder()!
         renderEncoder.setComputePipelineState(states.render)
+        
         renderEncoder.setTexture(image, index: 0)
         renderEncoder.setTexture(drawable, index: 1)
         renderEncoder.setTexture(textures.read, index: 2)
+        
+        renderEncoder.setSamplerState(textureSampler, index: 0)
 
         // Declare the number of threads per thread group and threads per grid
         var width = states.render.threadExecutionWidth
